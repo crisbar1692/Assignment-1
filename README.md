@@ -1,2 +1,5 @@
 # Assignment-1
-Assingment 1 for Scientific Programming
+Assignment 1 for Scientific Programming
+
+This assigment has been done as part of the course scientific programming. The goal of the task is to show the results of a query
+where drugs targeting the genes involve in RENAL TUBULAR DYSGENESIS OF GENETIC ORIGIN and visualize them. The Query was made with SPARQL searching in wikidata database. Embebing javascritp into html file and using visualization of d3js a table and tree chart were made to show the results of the query. The tree chart has four layers the first node is for the disease, next layer is connected to show the genes involved, then the products encode for this genes and finally the last layer has the names of the drugs involved targeting the products. Different commits were made to present the assigment first once the first files were created, the code for the query, the visualization part and finally the documentation. The License used is GNU General Public License v3.0 which is available for comercial use, modification distribution, patent use and private use. License is limited for liability and warranty. The files contained in this repository are the code, the license, the readme and autors file. This task was made for Cristian Alberto Barrios Espinosa student of second year master Systems Biology University of Maastricht.
