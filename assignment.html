@@ -8,7 +8,7 @@
 <script src="https://d3js.org/d3.v4.js"></script>
 
 <meta charset="utf-8">
-		<title>D3: Tubular renal disease Bubble Chart</title>
+		<title> Tubular renal disease </title>
 		<script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
 
 		<style type="text/css">
@@ -18,15 +18,23 @@
 </head>
 
 <body>
-  <pre id="output"></pre>
+
+<h1> DRUGS TARGETING GENES RELATED WITH RENAL TUBULAR DYSGENESIS OF GENETIC ORIGIN </h1>
+
+  <div id="output"></div>
+  <div id="chart"></div>
 	
  <script type="text/javascript">
   
   
-    query = `SELECT ?drug  ?drugLabel ?gene ?geneLabel WHERE {
+    query = `SELECT ?drugLabel ?gene_productLabel ?geneLabel WHERE {
   wd:Q55782264 wdt:P2293   ?gene.
-  ?drug wdt:P129 ?gene_product .
   ?gene wdt:P688 ?gene_product .
+  
+  OPTIONAL{
+	?drug wdt:P129 ?gene_product .
+  }
+  
  SERVICE wikibase:label { bd:serviceParam wikibase:language '[AUTO_LANGUAGE],en'. }
 }`
     fetch(
@@ -35,9 +43,124 @@
     ).then( wdk.simplify.sparqlResults
     ).then(
 		function (response) {
-			document.getElementById('output').innerHTML =
-			  JSON.stringify(response, undefined, 2);
 			
+			data = response;
+			
+			html = "<table border=\"1\">";
+			
+			html += "<tr>";
+			
+			html += "<td>Gene Name </td>";
+			html += "<td>Gene Product </td>";
+			html += "<td>Drug Name </td>";
+			
+			html += "</tr>";
+			
+			for(var i = 0; i < response.length; i++){
+				
+				html += "<tr>";
+			
+				html += "<td>"+  response[i].geneLabel +"</td>";
+				
+				html += "<td>"+ response[i].gene_productLabel +"</td>";
+				
+				if(response[i].drugLabel !== undefined){
+					html += "<td>"+ response[i].drugLabel +"</td>";
+				}
+				else{
+					html += "<td>No drug</td>";
+				}
+				
+				html += "</tr>"; 
+				
+			
+			}
+			
+			html += "</table>";
+			
+			document.getElementById('output').innerHTML = html;
+			
+			arbol = d3.nest()
+			.key(function(d) { return d.geneLabel; })
+			.key(function(d) { return d.gene_productLabel; })
+			.key(function(d) { return d.drugLabel; })
+			.entries(data);
+	
+	parent = {key: "Renal tubular dysgenesis", values: arbol};
+
+	root_element = d3.hierarchy(parent, d => d.values).sum(() => 1)
+
+	var depthScale = d3.scaleOrdinal()
+						.range(["#ff0000", "#eb1a1a", "#ba1616", "#632323"])
+						
+	var depthScaleSize = d3.scaleOrdinal()
+						.range(["50", "40", "20", "15"])
+	var depthTextPositiony = d3.scaleOrdinal()
+						.range(["-50", "-40", "-15", "0"])
+						
+						
+
+	var dimension = 1000	
+	var treeChart = d3.tree();
+	treeChart.size([dimension,dimension])
+
+	hirarchy = treeChart(root_element ).descendants()
+
+	// Create main SVG canvas and initialize a group element for each node in the tree
+	d3.select("#chart").append("svg")
+			.attr('width', dimension)
+			.attr('height', dimension)
+			.attr('transform', 'translate(0,0)')
+			.append("g")
+			.attr("id", "plot")
+			.attr("transform", "translate(60,5)")
+			.selectAll("g")
+			.data(hirarchy)
+			.enter()
+			.append("g")
+			.attr("class", d => d.depth < 3  ? "mconn" : "fconn")
+			.attr("transform", d => `translate(${d.y},${d.x})`)
+
+	// Create a circle element for each node in the tree with a color based on the depth
+	d3.selectAll("g[class*='conn']")
+			.append("circle")
+			.attr("r", d => depthScaleSize(d.depth))
+			.style("fill", d => depthScale(d.depth))
+			.style("stroke", "blue")
+			.style("stroke-width", "5px");
+			
+
+	// Add text to the nodes of depth less than 3
+	d3.selectAll("g.mconn")
+			.append("text")
+			.text(d => d.data.key)
+			.attr("transform", d => `translate(-10,-25)`)
+			.attr("font-size","15px")
+			.attr("font-weight","bold")
+			.attr("text-transform","uppercase")
+		
+			
+	// Add text to the nodes of depth 3
+	d3.selectAll("g.fconn")
+			.append("text")
+			.text(function(d) { if( d.data.key !== "undefined") {return d.data.key} else { return "No Available Drug"} })
+			.attr("transform", d => `translate(20,0)`)
+			.attr("font-size","15px")
+			.attr("font-weight","bold")
+			.attr("text-transform","uppercase")
+
+			
+	// Draw the lines between the nodes
+	d3.select("#plot").selectAll("line")
+			.data(hirarchy.filter(function(d) { if( d.depth < 4) return d.parent }))
+			.enter().insert("line","g.vnode")
+			.attr("x1", d => d.parent.y)
+			.attr("y1", d => d.parent.x)
+			.attr("x2", d => d.y)
+			.attr("y2", d => d.x)
+			.style("stroke", "blue")
+			.style("stroke-width", "2px");
+
 
 		}
 	)
