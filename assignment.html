@@ -106,7 +106,7 @@
 
 	hirarchy = treeChart(root_element ).descendants()
 
-	// Create main SVG canvas and initialize a group element for each node in the tree
+	
 	d3.select("#chart").append("svg")
 			.attr('width', dimension)
 			.attr('height', dimension)
@@ -121,7 +121,6 @@
 			.attr("class", d => d.depth < 3  ? "mconn" : "fconn")
 			.attr("transform", d => `translate(${d.y},${d.x})`)
 
-	// Create a circle element for each node in the tree with a color based on the depth
 	d3.selectAll("g[class*='conn']")
 			.append("circle")
 			.attr("r", d => depthScaleSize(d.depth))
@@ -130,7 +129,6 @@
 			.style("stroke-width", "5px");
 			
 
-	// Add text to the nodes of depth less than 3
 	d3.selectAll("g.mconn")
 			.append("text")
 			.text(d => d.data.key)
@@ -139,8 +137,7 @@
 			.attr("font-weight","bold")
 			.attr("text-transform","uppercase")
 		
-			
-	// Add text to the nodes of depth 3
+
 	d3.selectAll("g.fconn")
 			.append("text")
 			.text(function(d) { if( d.data.key !== "undefined") {return d.data.key} else { return "No Available Drug"} })
@@ -150,7 +147,7 @@
 			.attr("text-transform","uppercase")
 
 			
-	// Draw the lines between the nodes
+
 	d3.select("#plot").selectAll("line")
 			.data(hirarchy.filter(function(d) { if( d.depth < 4) return d.parent }))
 			.enter().insert("line","g.vnode")
