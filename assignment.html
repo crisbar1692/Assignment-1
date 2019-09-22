@@ -4,7 +4,7 @@
 <script src="https://cdn.rawgit.com/maxlath/wikidata-sdk/dist/dist/wikibase-sdk.min.js"></script>
 <!-- Initialize a global wdk object using the WBK object -->
 <script src="https://cdn.rawgit.com/maxlath/wikidata-sdk/dist/dist/wikidata-sdk.min.js"></script>
-
+<!-- Initialize a d3js object -->
 <script src="https://d3js.org/d3.v4.js"></script>
 
 <meta charset="utf-8">
@@ -12,7 +12,7 @@
 		<script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
 
 		<style type="text/css">
-			/* No style rules here yet */		
+				
 		</style>
 
 </head>
@@ -20,13 +20,14 @@
 <body>
 
 <h1> DRUGS TARGETING GENES RELATED WITH RENAL TUBULAR DYSGENESIS OF GENETIC ORIGIN </h1>
-
+<!-- Space for the table -->
   <div id="output"></div>
+  <!-- Space for the tree -->
   <div id="chart"></div>
 	
  <script type="text/javascript">
   
-  
+  //Start query select drugs genes prodcuts and genes
     query = `SELECT ?drugLabel ?gene_productLabel ?geneLabel WHERE {
   wd:Q55782264 wdt:P2293   ?gene.
   ?gene wdt:P688 ?gene_product .
@@ -43,19 +44,19 @@
     ).then( wdk.simplify.sparqlResults
     ).then(
 		function (response) {
-			
+			  //Make a table to visualize the results of the query
 			data = response;
 			
 			html = "<table border=\"1\">";
 			
 			html += "<tr>";
-			
+			// header
 			html += "<td>Gene Name </td>";
 			html += "<td>Gene Product </td>";
 			html += "<td>Drug Name </td>";
 			
 			html += "</tr>";
-			
+			// Data from the results
 			for(var i = 0; i < response.length; i++){
 				
 				html += "<tr>";
@@ -79,17 +80,17 @@
 			html += "</table>";
 			
 			document.getElementById('output').innerHTML = html;
-			
+			// Visualization in a tree
 			arbol = d3.nest()
 			.key(function(d) { return d.geneLabel; })
 			.key(function(d) { return d.gene_productLabel; })
 			.key(function(d) { return d.drugLabel; })
 			.entries(data);
-	
+	// defining required parameters
 	parent = {key: "Renal tubular dysgenesis", values: arbol};
 
 	root_element = d3.hierarchy(parent, d => d.values).sum(() => 1)
-
+	// Colors and Sizes of circles, position of text in the tree
 	var depthScale = d3.scaleOrdinal()
 						.range(["#ff0000", "#eb1a1a", "#ba1616", "#632323"])
 						
@@ -99,14 +100,15 @@
 						.range(["-50", "-40", "-15", "0"])
 						
 						
-
+	//Size of the layout
 	var dimension = 1000	
+	//Initialize tree
 	var treeChart = d3.tree();
 	treeChart.size([dimension,dimension])
-
+	// Organize data of the tree
 	hirarchy = treeChart(root_element ).descendants()
 
-	
+	// Inizialize SVG and group elements defining all the general required attributes
 	d3.select("#chart").append("svg")
 			.attr('width', dimension)
 			.attr('height', dimension)
@@ -119,43 +121,51 @@
 			.enter()
 			.append("g")
 			.attr("class", d => d.depth < 3  ? "mconn" : "fconn")
+			// define the layout of the tree as horizontal
 			.attr("transform", d => `translate(${d.y},${d.x})`)
-
+	// Make circles and defined caracteristics of size color and surondings
 	d3.selectAll("g[class*='conn']")
 			.append("circle")
+			//Colors and Size of the circles defined accordingly with the previous variable and the layer
 			.attr("r", d => depthScaleSize(d.depth))
 			.style("fill", d => depthScale(d.depth))
 			.style("stroke", "blue")
 			.style("stroke-width", "5px");
 			
-
+	//Define the text for the first three layers with specific font ans size
 	d3.selectAll("g.mconn")
 			.append("text")
 			.text(d => d.data.key)
+			//Position of the text
 			.attr("transform", d => `translate(-10,-25)`)
+			//Size of the text
 			.attr("font-size","15px")
+			//Make the text in bold
 			.attr("font-weight","bold")
-			.attr("text-transform","uppercase")
+			
 		
-
+	//Define same text as before but for the last layer
 	d3.selectAll("g.fconn")
 			.append("text")
 			.text(function(d) { if( d.data.key !== "undefined") {return d.data.key} else { return "No Available Drug"} })
 			.attr("transform", d => `translate(20,0)`)
 			.attr("font-size","15px")
 			.attr("font-weight","bold")
-			.attr("text-transform","uppercase")
-
 			
 
+			
+	//Defining and drawing the conections between nodes.
 	d3.select("#plot").selectAll("line")
 			.data(hirarchy.filter(function(d) { if( d.depth < 4) return d.parent }))
 			.enter().insert("line","g.vnode")
+			//Make the links as well horizontal
 			.attr("x1", d => d.parent.y)
 			.attr("y1", d => d.parent.x)
 			.attr("x2", d => d.y)
 			.attr("y2", d => d.x)
+			//Blue links
 			.style("stroke", "blue")
+			// width of the links
 			.style("stroke-width", "2px");
 
 
